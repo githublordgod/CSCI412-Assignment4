@@ -49,6 +49,7 @@ public class Game extends View {
     private Set<PwrUp> pickups;
     private MediaPlayer hit1;
     private MediaPlayer hit2;
+    private MediaPlayer pwr;
 
     public Game(Context c) {
         super(c);
@@ -64,6 +65,7 @@ public class Game extends View {
         red.setColor(0xFFEE0000);
         hit1 = MediaPlayer.create(c, R.raw.hit1);
         hit2 = MediaPlayer.create(c, R.raw.hit2);
+        pwr = MediaPlayer.create(c, R.raw.od);
         start();
         clock.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -172,6 +174,7 @@ public class Game extends View {
             if (p.isAlive()) {
                 p.getRect().offset(0, 6);
                 if (Rect.intersects(bat, p.getRect())) {
+                    pwr.start();
                     score += 2;
                     p.grab();
                     if (!ODactive) overdrive();
