@@ -5,7 +5,6 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.media.MediaPlayer;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -21,37 +20,33 @@ public class Game extends View {
     private final int FPS = 30;
     private final int DOUBLETAP_BUFFER = 200;
 
-    private int moveSpeed = 10;
-    private int airdashSpeed = 50;
-    private int airdashFrames = 5;
-
-    private int batY = 1000;
-    private int batW = 100;
-    private int ballSize = 40;
-    private int blockW = 120;
-    private int blockH = 50;
-
+    private int moveSpeed;
+    private int airdashSpeed;
+    private int airdashFrames;
+    private int batY;
+    private int batW;
+    private int ballSize;
+    private int blockW;
+    private int blockH;
     private boolean running;
     private int width, height;
     private Paint black, orange, purple, green, red;
     private Rect bat, ball, ai1, ai2, ai3;
     private int batVel;
     private int ballXVel, ballYVel;
-    private Timer clock = new Timer();
-    private Timer tapClock = new Timer();
-    private Timer OD = new Timer();
-    private int ODtime = 5000;
-    private boolean ODactive = false;
+    private Timer clock;
+    private Timer tapClock;
+    private Timer OD;
+    private int ODtime;
+    private boolean ODactive;
     private int tap;
-    private int airdash = 0;
+    private int airdash;
     private Random rng;
     private boolean clear;
     private int score, lives;
     private LinkedList<Integer> history;
-
     private Set<Block> blocks;
     private Set<PwrUp> pickups;
-
     private MediaPlayer hit1;
     private MediaPlayer hit2;
 
@@ -70,45 +65,61 @@ public class Game extends View {
         hit1 = MediaPlayer.create(c, R.raw.hit1);
         hit2 = MediaPlayer.create(c, R.raw.hit2);
         start();
-    }
-
-    public void start() {
-        bat = new Rect(250, batY, 250 + batW, batY + 40);
-        ball = new Rect(60, 800, 60 + ballSize, 800 + ballSize);
-        ballXVel = 15;
-        ballYVel = -13;
-        blocks = new HashSet<>();
-        rng = new Random();
-        pickups = new HashSet<>();
-        score = 0;
-        lives = 3;
-        ai1 = new Rect();
-        ai2 = new Rect();
-        ai3 = new Rect();
-        history = new LinkedList<>();
-
-        // quick and dirty generate semi random grid
-        int r = rng.nextInt(6);
-        for (int i = 1; i < 8; i++) {
-            blocks.add(new Block(i * (blockW + r), 100, blockW, blockH));
-            blocks.add(new Block(i * (blockW + r), 340, blockW, blockH));
-        }
-        for (int i = 2; i < 7; i++) {
-            blocks.add(new Block(i * (blockW + r + 2), 200, blockW, blockH));
-            blocks.add(new Block(i * (blockW + r + 8), 400, blockW, blockH));
-        }
-        for (int i = 0; i < 8; i++) {
-            blocks.add(new Block(i * (blockW + r) + 40, 260, blockW, blockH));
-        }
-
-        running = true;
-        clear = false;
         clock.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 if (running) update();
             }
         }, 0, 1000 / FPS);
+    }
+
+    public void start() {
+        clock = new Timer();
+        tapClock = new Timer();
+        OD = new Timer();
+        blocks = new HashSet<>();
+        rng = new Random();
+        pickups = new HashSet<>();
+        ai1 = new Rect();
+        ai2 = new Rect();
+        ai3 = new Rect();
+        history = new LinkedList<>();
+
+        // define fixed parameters
+        moveSpeed = 10;
+        airdashSpeed = 50;
+        airdashFrames = 5;
+        batY = 1000;
+        batW = 100;
+        ballSize = 40;
+        blockW = 120;
+        blockH = 50;
+        airdash = 0;
+        ODactive = false;
+        ODtime = 5000;
+        score = 0;
+        lives = 3;
+
+        // quick and dirty generate semi-random starting parameters
+        int r = rng.nextInt(10) + 2;
+        bat = new Rect(500, batY, 500 + batW, batY + 40);
+        ball = new Rect(80 * r, 800 + r, 80 * r + ballSize, 800 + r + ballSize);
+        ballXVel = 2 * (r - 7);
+        ballYVel = -6 - r;
+        for (int i = 1; i < 8; i++) {
+            blocks.add(new Block(i * (blockW + r), 100 - r, blockW, blockH));
+            blocks.add(new Block(i * (blockW + r), 340 + r, blockW, blockH));
+        }
+        for (int i = 2; i < 7; i++) {
+            blocks.add(new Block(i * (blockW + r + 2), 180 + r, blockW, blockH));
+            blocks.add(new Block(i * (blockW + r + 8), 420 - r, blockW, blockH));
+        }
+        for (int i = 0; i < 8; i++) {
+            blocks.add(new Block(i * (blockW + r) + 40, 260 - r, blockW, blockH));
+        }
+
+        running = false;
+        clear = false;
     }
 
     // logic loop
@@ -140,9 +151,8 @@ public class Game extends View {
         if (ball.centerY() <= 0) ballYVel = -ballYVel;
         if (ball.centerY() > bat.centerY() + 200) {
             lives--;
-            Log.i("state", "life lost, remaining: " + lives);
             ballYVel = -ballYVel;
-            if (lives == 0) lose();
+            if (lives == 0) end();
         }
         ball.offset(ballXVel, ballYVel);
 
@@ -178,12 +188,12 @@ public class Game extends View {
                     hit1.start();
                     b.destroy();
                     score++;
+                    if (ODactive) score++;
                     if (ball.left < b.getRect().right && ball.right > b.getRect().left)
                         ballYVel = -ballYVel;
                     else ballXVel = -ballXVel;
                     // roll for pickup, 1/4 chance
-                    int r = rng.nextInt(3);
-                    if (r == 0) {
+                    if (rng.nextInt(3) == 0) {
                         PwrUp p = new PwrUp();
                         p.drop(b.getRect().centerX(), b.getRect().centerY());
                         pickups.add(p);
@@ -191,16 +201,10 @@ public class Game extends View {
                 }
             }
         }
-        if (clear) win();
+        if (clear) end();
     }
 
-    public void win() {
-        Log.i("state", "won game");
-        running = false;
-    }
-
-    public void lose() {
-        Log.i("state", "lost game");
+    public void end() {
         running = false;
     }
 
@@ -214,11 +218,13 @@ public class Game extends View {
         OD.schedule(new TimerTask() {
             @Override
             public void run() {
-                ODactive = false;
-                moveSpeed -= 4;
-                airdashSpeed -= 4;
-                bat.right -= 30;
-                bat.left += 30;
+                if (ODactive) {
+                    ODactive = false;
+                    moveSpeed -= 4;
+                    airdashSpeed -= 4;
+                    bat.right -= 30;
+                    bat.left += 30;
+                }
             }
         }, ODtime);
     }
@@ -226,6 +232,13 @@ public class Game extends View {
     public void onDraw(Canvas canvas) {
         canvas.drawRect(ball, orange);
         for (Block b : blocks) {
+            if (ODactive
+                    && b.getRect().centerX() > 0
+                    && b.getRect().centerX() < width
+                    && b.getRect().centerY() > 0
+                    && b.getRect().centerY() < height) {
+                b.getRect().offset(rng.nextInt(5) - 2, rng.nextInt(5) - 2);
+            }
             if (b.isAlive()) canvas.drawRect(b.getRect(), purple);
         }
         for (PwrUp p : pickups) {
@@ -258,20 +271,25 @@ public class Game extends View {
         float x = e.getX();
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                tap++;
-                if (tap > 1) {
-                    if (x > width / 2) airdash = airdashFrames;
-                    else airdash = -airdashFrames;
-                    tap = 0;
+                if (x > width / 2) {
+                    batVel = moveSpeed;
+                    tap++;
                 }
-                tapClock.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        tap = 0;
-                    }
-                }, DOUBLETAP_BUFFER);
-                if (x > width / 2) batVel = moveSpeed;
-                else batVel = -moveSpeed;
+                else {
+                    batVel = -moveSpeed;
+                    tap--;
+                }
+                if (tap > 1 || tap < -1) {
+                    airdash = airdashFrames * Integer.signum(tap);
+                    tap = 0;
+                } else {
+                    tapClock.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            tap = 0;
+                        }
+                    }, DOUBLETAP_BUFFER);
+                }
                 break;
             case MotionEvent.ACTION_UP:
                 batVel = 0;
@@ -287,13 +305,20 @@ public class Game extends View {
     public void resume() {
         running = true;
     }
+    public void stop() {
+        start();
+        invalidate();
+    }
     public int getScore() {
         return score;
     }
     public int getState() {
-        if (running) return 0;
-        else if (clear) return 1;
-        else if (lives == 0) return 2;
-        else return -1;
+        if (running) return 0; // playing
+        else if (clear) return 1; // won
+        else if (lives == 0) return 2; // lost
+        else return -1; // paused
+    }
+    public int getLives() {
+        return lives;
     }
 }

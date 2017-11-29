@@ -7,17 +7,18 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link GameScreen.OnFragmentInteractionListener} interface
+ * {@link GameDisplay.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link GameScreen#newInstance} factory method to
+ * Use the {@link GameDisplay#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class GameScreen extends Fragment {
+public class GameDisplay extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -28,9 +29,8 @@ public class GameScreen extends Fragment {
     private String mParam2;
 
     private OnFragmentInteractionListener mListener;
-    private Game game;
 
-    public GameScreen() {
+    public GameDisplay() {
         // Required empty public constructor
     }
 
@@ -40,11 +40,11 @@ public class GameScreen extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment GameScreen.
+     * @return A new instance of fragment GameDisplay.
      */
     // TODO: Rename and change types and number of parameters
-    public static GameScreen newInstance(String param1, String param2) {
-        GameScreen fragment = new GameScreen();
+    public static GameDisplay newInstance(String param1, String param2) {
+        GameDisplay fragment = new GameDisplay();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -59,13 +59,13 @@ public class GameScreen extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-        game = new Game(this.getContext());
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return game;
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_game_display, container, false);
     }
 
     @Override
@@ -96,6 +96,32 @@ public class GameScreen extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        // see GameMenu.java
+        // TODO: rewrite android OS
+    }
+
+    // force updates on text labels
+    public void setScore(final String score) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((TextView) getView().findViewById(R.id.score)).setText(score);
+            }
+        });
+    }
+    public void setLives(final String lives) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((TextView) getView().findViewById(R.id.lives)).setText(lives);
+            }
+        });
+    }
+    public void setState(final String state) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((TextView) getView().findViewById(R.id.state)).setText(state);
+            }
+        });
     }
 }

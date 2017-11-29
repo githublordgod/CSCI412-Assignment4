@@ -12,6 +12,26 @@
         android:name="a4.csci412.wwu.edu.csci412_assignment4.GameScreen"
         android:layout_width="match_parent"
         android:layout_height="420dp"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="0dp" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <fragment
+        android:id="@+id/menu"
+        android:name="a4.csci412.wwu.edu.csci412_assignment4.GameMenu"
+        android:layout_width="239dp"
+        android:layout_height="84dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <fragment
+        android:id="@+id/display"
+        android:name="a4.csci412.wwu.edu.csci412_assignment4.GameDisplay"
+        android:layout_width="105dp"
+        android:layout_height="109dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/menu" />
 </android.support.constraint.ConstraintLayout>

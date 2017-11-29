@@ -7,17 +7,18 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link GameScreen.OnFragmentInteractionListener} interface
+ * {@link GameMenu.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link GameScreen#newInstance} factory method to
+ * Use the {@link GameMenu#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class GameScreen extends Fragment {
+public class GameMenu extends Fragment implements View.OnClickListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -28,9 +29,10 @@ public class GameScreen extends Fragment {
     private String mParam2;
 
     private OnFragmentInteractionListener mListener;
-    private Game game;
 
-    public GameScreen() {
+    private Button start, pause, stop;
+
+    public GameMenu() {
         // Required empty public constructor
     }
 
@@ -40,11 +42,11 @@ public class GameScreen extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment GameScreen.
+     * @return A new instance of fragment GameMenu.
      */
     // TODO: Rename and change types and number of parameters
-    public static GameScreen newInstance(String param1, String param2) {
-        GameScreen fragment = new GameScreen();
+    public static GameMenu newInstance(String param1, String param2) {
+        GameMenu fragment = new GameMenu();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -59,13 +61,20 @@ public class GameScreen extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-        game = new Game(this.getContext());
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return game;
+        // Inflate the layout for this fragment
+        View v = inflater.inflate(R.layout.fragment_game_menu, container, false);
+        start = v.findViewById(R.id.start);
+        start.setOnClickListener(this);
+        pause = v.findViewById(R.id.pause);
+        pause.setOnClickListener(this);
+        stop = v.findViewById(R.id.stop);
+        stop.setOnClickListener(this);
+        return v;
     }
 
     @Override
@@ -96,6 +105,10 @@ public class GameScreen extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        // see GameMenu.java
+        // this doesn't actually do anything but idk which boiler plates to delete
+    }
+
+    public void onClick(View v) {
+        ((MainActivity) getActivity()).buttonClick(v);
     }
 }
